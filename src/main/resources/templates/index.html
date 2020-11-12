@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="http://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script th:inline="javascript">
+
+        //
+        // wx.chooseWXPay({
+        //     timestamp: 0, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+        //     nonceStr: '', // 支付签名随机串，不长于 32 位
+        //     package: '', // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+        //     signType: '', // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
+        //     paySign: '', // 支付签名
+        //     success: function (res) {
+        //         // 支付成功后的回调函数
+        //     }
+        // });
+        let params = location.search;
+        let code = params.substring(params.indexOf('=') + 1, params.indexOf('&'));
+
+        fetch('http://dev-gyj.cdmcs.com/init', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8',
+            },
+            body: JSON.stringify({
+                code: code
+            }),
+        }).then(res => {
+            let resJson = res.json();
+            console.log('res====>>>>>>', res);
+            return resJson;
+        }).then((response) => {
+            alert(JSON.stringify(response))
+
+            const {appId, timestamp, nonceStr, signature, payBody} = response;
+            const {prepay_id,paySign} = payBody;
+            wx.config({
+                debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                appId: appId, // 必填，公众号的唯一标识
+                timestamp: timestamp, // 必填，生成签名的时间戳
+                nonceStr: nonceStr, // 必填，生成签名的随机串
+                signature: signature,// 必填，签名
+                jsApiList: ['chooseWXPay'] // 必填，需要使用的JS接口列表
+            });
+
+            //{nonce_str=swAECILKYt7t3GVZ, appid=wx5c7e1208d6baa899, sign=E8C7D5672E777193D94E1A6F12B06D59, trade_type=JSAPI, return_msg=OK, result_code=SUCCESS, mch_id=1603519915, return_code=SUCCESS, prepay_id=wx02111740647885c7592c3976112c780000}
+            wx.chooseWXPay({
+                timestamp: timestamp, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+                nonceStr: nonceStr, // 支付签名随机串，不长于 32 位
+                package: 'prepay_id=' + prepay_id, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+                signType: 'MD5', // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
+                paySign: paySign, // 支付签名
+                success: function (res) {
+                    // 支付成功后的回调函数
+                }
+            });
+        }).catch(error => console.log('err:', err));
+
+
+    </script>
+</head>
+<body>
+<span th:text="${msg}"></span>
+<span></span>
+</body>
+</html>
